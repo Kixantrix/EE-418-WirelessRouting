@@ -28,10 +28,10 @@ class Network:
 		for edge in self.G.edges():
 			self.calcWLPVM(edge, l)
 
-	# Calculates all TPVM values based on already calculated LKVM and tau
-	def calcAllTPVM(self, tau):
+	# Calculates all TPVM values based on already calculated LKVM and gamma
+	def calcAllTPVM(self, gamma):
 		for edge in self.G.edges():
-			self.calcTPVM(edge, tau)
+			self.calcTPVM(edge, gamma)
 
 	# Calculates lkvm for an edge and stores it to the edge
 	def calcLKVM(self, edge):
@@ -51,6 +51,8 @@ class Network:
 			c.union(self.G.nodes(1)[randNodeIndex][1]['keys'])
 			lkvm = lkvm + 1
 		self.G[i][j]['lkvm'] = lkvm
+
+
 
 	# Generates the nodes within the network
 	def genNodes(self):
@@ -89,11 +91,11 @@ class Network:
 		wlpvm = 1 + 1.0 * l / edge['lkvm']
 		self.G[i][j]['wlpvm'] = wlpvm
 
-	# Calculates TPVM for edge and tau value
-	def calcTPVM(self, edge, tau):
+	# Calculates TPVM for edge and gamma value
+	def calcTPVM(self, edge, gamma):
 		i = edge[0]
 		j = edge[1]
-		if edge['lkvm'] < tau:
+		if edge['lkvm'] < gamma:
 			tpvm = 1
 		else:
 			tpvm = float("inf")
