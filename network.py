@@ -51,12 +51,13 @@ class Network:
 			c.union(self.G.nodes(1)[randNodeIndex][1]['keys'])
 			lkvm = lkvm + 1
 		self.G[i][j]['lkvm'] = lkvm
+		self.G[i][j]['keys'] = sharedKeys
 
 
 
 	# Generates the nodes within the network
 	def genNodes(self):
-		for i in range(self.size):
+		for i in range(self.size - 1):
 			self.addNewNode(i)
 
 	# Adds a new node to the graph with random values within parameters
