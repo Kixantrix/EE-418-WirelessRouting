@@ -98,7 +98,7 @@ class Network:
     def calcTPVM(self, edge, gamma):
         i = edge[0]
         j = edge[1]
-        if self.G[i][j]['lkvm'] < gamma:
+        if self.G[i][j]['lkvm'] > gamma:
             tpvm = 1
         else:
             tpvm = float("inf")
