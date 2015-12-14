@@ -91,14 +91,14 @@ class Network:
     def calcWLPVM(self, edge, l):
         i = edge[0]
         j = edge[1]
-        wlpvm = 1 + 1.0 * l / edge['lkvm']
+        wlpvm = 1 + 1.0 * l / self.G[i][j]['lkvm']
         self.G[i][j]['wlpvm'] = wlpvm
 
     # Calculates TPVM for edge and gamma value
     def calcTPVM(self, edge, gamma):
         i = edge[0]
         j = edge[1]
-        if edge['lkvm'] < gamma:
+        if self.G[i][j]['lkvm'] < gamma:
             tpvm = 1
         else:
             tpvm = float("inf")
