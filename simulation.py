@@ -2,8 +2,9 @@
 
 import networkx as nx
 import random
-# import plotly
+import matplotlib.pyplot as plt
 from network import Network
+
 
 
 # noinspection PyPep8Naming
@@ -21,18 +22,18 @@ def main():
         # We use tpvm, so we must calculate it for new value
         N.calcAllTPVM(gamma)
         # We don't want repeated paths, so use a set
-        paths = set()
+        paths = []
         totalHops = 0
         # Generate 30 paths
         while len(paths) < 30:
             start = random.randint(0, 250 - 1)
             end = random.randint(0, 250 - 1)
             # add path find path if start and end are different
-            if not start == end:
+            if not start == end and nx.has_path(N.G, start, end):
                 shortestPath = nx.shortest_path(N.G, start, end, 'tpvm')
                 # add path if not already added. If path is impossible, will cause exception
-                if shortestPath not in paths:
-                    paths = paths + [shortestPath]
+                if not listInCollection(shortestPath, paths):
+                    paths += [shortestPath]
                     totalHops += len(shortestPath)
         # Average totalHops for the gamma and add to array of averages
         gAvgHopsArray = gAvgHopsArray + [1.0 * totalHops / 30]
@@ -49,18 +50,18 @@ def main():
         # We use tpvm, so we must calculate it for new value
         N.calcAllWLPVM(l)
         # We don't want repeated paths, so use a set
-        paths = set()
+        paths = []
         totalHops = 0
         # Generate 30 paths
         while len(paths) < 30:
             start = random.randint(0, 250 - 1)
             end = random.randint(0, 250 - 1)
             # add path find path if start and end are different
-            if not start == end:
+            if not start == end and nx.has_path(N.G, start, end):
                 shortestPath = nx.shortest_path(N.G, start, end, 'wlpvm')
                 # add path if not already added. If path is impossible, will cause exception
-                if shortestPath not in paths:
-                    paths = paths + [shortestPath]
+                if not listInCollection(shortestPath, paths):
+                    paths += [shortestPath]
                     totalHops += len(shortestPath)
         # Average totalHops for the gamma and add to array of averages
         lAvgHopsArray = lAvgHopsArray + [1.0 * totalHops / 30]
@@ -68,13 +69,30 @@ def main():
         lAvgCapArray = lAvgCapArray + [simAttack(N.G, paths)]
 
     # plot retults
-
-    # a) find the number of keys per node
-    N1 = Network(size=100, width=1500, keyPoolSize=1000, keysPerNode=30, commRange=500)
-
-    # b) find number of keys per node
-    N2 = Network(size=1000, width=1000, keyPoolSize=1200, keysPerNode=30, commRange=100)
-
+    plt.figure(1)
+    plt.subplot(211)
+    plt.title('Captures to Compromise in TPVM')
+    plt.plot(gArray, gAvgCapArray, 'bs')
+    plt.xlabel('Gamma')
+    plt.ylabel('Average # Captures to Compromise')
+    plt.subplot(212)
+    plt.title('Number of Hops in TPVM')
+    plt.plot(gArray, gAvgHopsArray, 'bs')
+    plt.xlabel('Value of Gamma')
+    plt.ylabel('Average # Hops in Path')
+    plt.show()
+    plt.figure(1)
+    plt.subplot(211)
+    plt.title('Captures to Compromise in WLPVM')
+    plt.plot(lArray, lAvgCapArray, 'bs')
+    plt.xlabel('Lambda')
+    plt.ylabel('Average # Captures to Compromise')
+    plt.subplot(212)
+    plt.title('Number of Hops in WLPVM')
+    plt.plot(lArray, lAvgHopsArray, 'bs')
+    plt.xlabel('Lambda')
+    plt.ylabel('Average # Hops in Path')
+    plt.show()
 
 # Returns the average number of node captures required to each path.
 # Does this by selecting a node, compromising its keys, then continuing until
@@ -97,11 +115,28 @@ def simAttack(G, paths):
             # add keys from captured node
             compromisedKeys = compromisedKeys.union(G.nodes(1)[compromisedNode][1]['keys'])
             # Iterate through paths to see if any are compromised
-            for path in paths:
+            index = 0;
+            while (not len(paths) == 0) and index < len(paths):
                 # Iterate through edges in path to see if path is compromised
-                for i in range(0, len(paths) - 1):
-                    if compromisedKeys.issuperset(G[i][i + 1]['keys']):
+                for i in range(0, len(paths[index]) - 1):
+                    node1 = paths[index][i]
+                    node2 = paths[index][i + 1]
+                    if G[node1][node2] and compromisedKeys.issuperset(G[node1][node2]['keys']):
                         totalCaptures += len(compromisedNodes)
-                        paths.remove(path)
+                        del paths[index]
+                        index -= 1;
+                        break;
+                index += 1
     # Return average number of captures per path
     return 1.0 * totalCaptures / 30
+
+# Since lists are unhashable, need this helper method
+def listInCollection(testList, testCollection):
+    for collectionList in testCollection:
+        if collectionList == testList:
+            return True
+    return False
+
+
+if __name__ == "__main__":
+    main()
