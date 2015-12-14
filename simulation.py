@@ -9,10 +9,10 @@ from network import Network
 # noinspection PyPep8Naming
 def main():
     # first network to test attacks on
-    N = Network(size=250, width=500, keyPoolSize=1000, keysPerNode=30, commRange=400)
+    N = Network(size=250, width=2500, keyPoolSize=1000, keysPerNode=30, commRange=400)
 
     # Try 100 values of gamma for tpvm test
-    gArray = range(1, 100)
+    gArray = range(1, 101)
     # Resulting array of average hops
     gAvgHopsArray = []
     # Resulting array of average number of captures needed to compromise a path
@@ -40,7 +40,7 @@ def main():
         gAvgCapArray = gAvgCapArray + [simAttack(N.G, paths)]
 
     # Try 100 values of l for wlpvm test
-    lArray = range(1, 100)
+    lArray = range(1, 101)
     # Resulting array of average hops
     lAvgHopsArray = []
     # Resulting array of average number of captures needed to compromise a path
@@ -99,7 +99,7 @@ def simAttack(G, paths):
             # Iterate through paths to see if any are compromised
             for path in paths:
                 # Iterate through edges in path to see if path is compromised
-                for i in range(0, len(paths) - 2):
+                for i in range(0, len(paths) - 1):
                     if compromisedKeys.issuperset(G[i][i + 1]['keys']):
                         totalCaptures += len(compromisedNodes)
                         paths.remove(path)

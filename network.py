@@ -50,15 +50,15 @@ class Network:
         lkvm = 0
         # Iterate while sharedKeys aren't within c
         while not sharedKeys.issubset(c):
-            randNodeIndex = random.randint(0, self.size)
-            c.union(self.G.nodes(1)[randNodeIndex][1]['keys'])
+            randNodeIndex = random.randint(0, self.size - 1)
+            c= c.union(self.G.nodes(1)[randNodeIndex][1]['keys'])
             lkvm += 1
         self.G[i][j]['lkvm'] = lkvm
         self.G[i][j]['keys'] = sharedKeys
 
     # Generates the nodes within the network
     def genNodes(self):
-        for i in range(self.size - 1):
+        for i in range(self.size):
             self.addNewNode(i)
 
     # Adds a new node to the graph with random values within parameters
@@ -73,11 +73,11 @@ class Network:
     # Adds edges for all nodes which are in range of each other
     def addEdges(self):
         for node in self.G.nodes(1):
-            for otherNode in self.G.nodes():
+            for otherNode in self.G.nodes(1):
+                keys1 = node[1]['keys']
+                keys2 = otherNode[1]['keys']
                 # Add edge if not the same node, if there is an edge, and if in range
-                if not (node == otherNode) and not self.G.has_edge(node[0], otherNode[0]) and self.inRange(node[1],
-                                                                                                           otherNode[
-                                                                                                               1]):
+                if not (node == otherNode) and not self.G.has_edge(node[0], otherNode[0]) and self.inRange(node[1], otherNode[1]) and bool(keys1.intersection(keys2)):
                     self.G.add_edge(node[0], otherNode[0])
 
     # Returns true if the nodes are in commsRange of each other
