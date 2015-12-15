@@ -36,6 +36,26 @@ class Network:
         for edge in self.G.edges():
             self.calcTPVM(edge, gamma)
 
+    # # Calculates lkvm for an edge and stores it to the edge
+    # def calcLKVM(self, edge):
+    #     i = edge[0]
+    #     j = edge[1]
+    #     iKeys = self.G.nodes(1)[i][1]['keys']
+    #     jKeys = self.G.nodes(1)[j][1]['keys']
+    #     # Find shared keys along edge
+    #     sharedKeys = iKeys.intersection(jKeys)
+    #     # Empty set to keys acquired until same as shared keys
+    #     c = set()
+    #     # lkvm cost to add to
+    #     lkvm = 0
+    #     # Iterate while sharedKeys aren't within c
+    #     while not sharedKeys.issubset(c):
+    #         randNodeIndex = random.randint(0, self.size - 1)
+    #         c= c.union(self.G.nodes(1)[randNodeIndex][1]['keys'])
+    #         lkvm += 1
+    #     self.G[i][j]['lkvm'] = lkvm
+    #     self.G[i][j]['keys'] = sharedKeys
+
     # Calculates lkvm for an edge and stores it to the edge
     def calcLKVM(self, edge):
         i = edge[0]
@@ -44,16 +64,18 @@ class Network:
         jKeys = self.G.nodes(1)[j][1]['keys']
         # Find shared keys along edge
         sharedKeys = iKeys.intersection(jKeys)
-        # Empty set to keys acquired until same as shared keys
-        c = set()
         # lkvm cost to add to
         lkvm = 0
-        # Iterate while sharedKeys aren't within c
-        while not sharedKeys.issubset(c):
-            randNodeIndex = random.randint(0, self.size - 1)
-            c= c.union(self.G.nodes(1)[randNodeIndex][1]['keys'])
-            lkvm += 1
-        self.G[i][j]['lkvm'] = lkvm
+        # Increment for every node which has an intersection
+        numSharedNodes = 0
+        N = len(self.G.nodes())
+        for node in self.G.nodes(1):
+            intersection = sharedKeys.intersection(node[1]['keys'])
+            if bool(intersection):
+                cardT = len(intersection)
+                lkvm += 2 * ((cardT) % 2) - 1
+                numSharedNodes += 1
+        self.G[i][j]['lkvm'] = 1.0 * N * lkvm / numSharedNodes
         self.G[i][j]['keys'] = sharedKeys
 
     # Generates the nodes within the network
