@@ -3,6 +3,7 @@
 import networkx as nx
 import random
 import math
+from itertools import *
 
 
 # noinspection PyPep8Naming
@@ -14,10 +15,14 @@ class Network:
         self.keyPoolSize = keyPoolSize  # Number of keys in total pool
         self.keysPerNode = keysPerNode  # Number of pools per node
         self.commRange = commRange  # Range in meters of communication
+        # Array of sets which contain each index as a key
+        self.keyArr = [set() for i in range(keyPoolSize + 1)]
         # Generate all nodes within the network
         self.genNodes()
         # Add edges for all nodes which are in range of each other
         self.addEdges()
+        # Fill key array
+        self.fillKeyArr()
         # Add calculated LKVM values
         self.calcAllLKVM()
 
@@ -36,26 +41,6 @@ class Network:
         for edge in self.G.edges():
             self.calcTPVM(edge, gamma)
 
-    # # Calculates lkvm for an edge and stores it to the edge
-    # def calcLKVM(self, edge):
-    #     i = edge[0]
-    #     j = edge[1]
-    #     iKeys = self.G.nodes(1)[i][1]['keys']
-    #     jKeys = self.G.nodes(1)[j][1]['keys']
-    #     # Find shared keys along edge
-    #     sharedKeys = iKeys.intersection(jKeys)
-    #     # Empty set to keys acquired until same as shared keys
-    #     c = set()
-    #     # lkvm cost to add to
-    #     lkvm = 0
-    #     # Iterate while sharedKeys aren't within c
-    #     while not sharedKeys.issubset(c):
-    #         randNodeIndex = random.randint(0, self.size - 1)
-    #         c= c.union(self.G.nodes(1)[randNodeIndex][1]['keys'])
-    #         lkvm += 1
-    #     self.G[i][j]['lkvm'] = lkvm
-    #     self.G[i][j]['keys'] = sharedKeys
-
     # Calculates lkvm for an edge and stores it to the edge
     def calcLKVM(self, edge):
         i = edge[0]
@@ -64,19 +49,27 @@ class Network:
         jKeys = self.G.nodes(1)[j][1]['keys']
         # Find shared keys along edge
         sharedKeys = iKeys.intersection(jKeys)
-        # lkvm cost to add to
+        # Total lkvm
         lkvm = 0
-        # Increment for every node which has an intersection
-        numSharedNodes = 0
-        N = len(self.G.nodes())
-        for node in self.G.nodes(1):
-            intersection = sharedKeys.intersection(node[1]['keys'])
-            if bool(intersection):
-                cardT = len(intersection)
-                lkvm += 2 * ((cardT) % 2) - 1
-                numSharedNodes += 1
-        self.G[i][j]['lkvm'] = 1.0 * N * lkvm / numSharedNodes
+        # Total nodes in graph
+        lenN = len(self.G.nodes())
+        # Permute T in powerset
+        for T in powerset(sharedKeys):
+            NT = set()
+            cardT = len(T)
+            for key in T:
+                NT = NT.union(self.keyArr[key])
+            lenNT = len(NT)
+            if lenNT > 0:
+                lkvm += 1.0 * (-1) ** (cardT + 1) * lenN / lenNT
+        self.G[i][j]['lkvm'] = lkvm    
         self.G[i][j]['keys'] = sharedKeys
+
+    # Adds value of node to the set at index of each key
+    def fillKeyArr(self):
+        for node in self.G.nodes(1):
+            for key in node[1]['keys']:
+                self.keyArr[key].add(node[0])
 
     # Generates the nodes within the network
     def genNodes(self):
@@ -125,3 +118,8 @@ class Network:
         else:
             tpvm = float("inf")
         self.G[i][j]['tpvm'] = tpvm
+
+def powerset(iterable):
+    "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
+    s = list(iterable)
+    return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
